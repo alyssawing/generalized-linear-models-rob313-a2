@@ -3,7 +3,6 @@ import time
 from data_utils import load_dataset
 import matplotlib.pyplot as plt
 
-#TODO - are Q1 & Q2 supposed to be answered here?
 
 ##############################################################################
 #######################      QUESTION 3      #################################
