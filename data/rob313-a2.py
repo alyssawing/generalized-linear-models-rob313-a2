@@ -26,12 +26,12 @@ def gaussian_kernel(x, z, theta=1.):
         # now evaluate the kernel using the euclidean distances squared between points
         return np.exp(-np.sum(np.square(x-z)/theta, axis=2, keepdims=False))
 
-# Q2 parameters:
-q2_thetas = [0.05, 0.1, 0.5, 1, 2] # shape parameters
-q2_lambdas = [0.001, 0.01, 0.1, 1] # regularization parameters
+# Q3 parameters:
+q3_thetas = [0.05, 0.1, 0.5, 1, 2] # shape parameters
+q3_lambdas = [0.001, 0.01, 0.1, 1] # regularization parameters
 np.random.seed(42)
 
-def rbf(x_train, y_train, x_val, y_val, thetas=q2_thetas, lambdas=q2_lambdas):
+def rbf(x_train, y_train, x_val, y_val, thetas=q3_thetas, lambdas=q3_lambdas):
     '''RBF model that minimizes least squares loss. Uses a Gaussian kernel with
     given list of shape parameter values (theta) and list of regularization 
     parameters (lambdas). Returns the best model (theta, lambda) and the
