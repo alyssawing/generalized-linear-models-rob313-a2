@@ -77,8 +77,6 @@ def rbf(dataset, validation=True, thetas=q3_thetas, lambdas=q3_lambdas):
         x = x_test
         y = y_test
 
-    # make inputs for  plotting like the "xx" in class notes? or is that already in given dataset
-
     for i, theta in enumerate(thetas):
         for j, lamb in enumerate(lambdas):
             # construct the kernel matrix
@@ -94,7 +92,7 @@ def rbf(dataset, validation=True, thetas=q3_thetas, lambdas=q3_lambdas):
             # print("x shape = {}".format(x.shape))
             # print("alpha shape = {}".format(alpha.shape))
             y_pred = np.dot(gaussian_kernel(x_train, x, theta=theta).T, alpha.reshape(-1,1)) # are these parameters right for gausian kernel? reshaping alpha into col vector
-            rmse = np.sqrt(np.mean(np.square(y_pred - y)))
+            rmse = np.sqrt(np.mean(np.square(y_pred - y))) # should this be least squared loss instead?? TODO
             min_rmse = min(min_rmse, rmse)
             print("theta = {}, lambda = {}, RMSE = {}\n".format(theta, lamb, rmse))
     print("min RMSE = {}".format(min_rmse))
@@ -103,6 +101,31 @@ def rbf(dataset, validation=True, thetas=q3_thetas, lambdas=q3_lambdas):
 ##############################################################################
 #######################      QUESTION 4      #################################
 ##############################################################################
+
+def greedy(dict, dataset='mauna_loa', validation=True):
+    '''Greedy regression algorithm using a dictionary of basis functions. The
+    inputs to this function are:
+    - dict: dictionary of basis functions (contains at least 200)
+    - dataset: string, either 'rosenbrock' or 'mauna_loa'
+    - validation: boolean, if True, use the validation set to find the best.
+        If False, use the test set to find the best.
+    '''
+    # Load the data:
+    if dataset=='mauna_loa':
+        x_train, x_val, x_test, y_train, y_val, y_test = load_dataset('mauna_loa')
+        x_train = x_train.reshape((-1, 1))
+        x_val = x_val.reshape((-1, 1)) 
+        x_test = x_test.reshape((-1, 1)) #is this right?
+    else:
+        return None
+
+    # Use either validation or test set:
+    if validation==True:
+        x = x_val
+        y = y_val
+    else:
+        x = x_test
+        y = y_test
 
 ##############################################################################
 #######################         MAIN        ##################################
@@ -116,5 +139,7 @@ if __name__ == "__main__":
     # rbf('mauna_loa', False, q3_thetas, q3_lambdas) # RBF model on the test set for mauna_loa
     # rbf('rosenbrock', True, q3_thetas, q3_lambdas) # RBF model on the validation set for rosenbrock
     # rbf('rosenbrock', False, q3_thetas, q3_lambdas) # RBF model on the test set for rosenbrock
+
+    # Q4: Greedy regression algorithm
 
     pass
