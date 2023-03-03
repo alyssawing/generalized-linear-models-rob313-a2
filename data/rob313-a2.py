@@ -9,7 +9,7 @@ from scipy.linalg import cho_factor, cho_solve
 ##############################################################################
 
 # MULTIDIMENSIONAL KERNEL DEFINITION - from class notes
-def gaussian_kernel(x, z, theta=1.):
+def gaussian_kernel(x, z, theta=1.): 
         """
         Evaluate the Gram matrix for a Gaussian kernel between points in x and z.
         Inputs:
@@ -86,8 +86,8 @@ def rbf(dataset, validation=True, thetas=q3_thetas, lambdas=q3_lambdas):
         for j, lamb in enumerate(lambdas):
             K = gaussian_kernel(x_train, x_train, theta=theta)  # kernel matrix
             K += lamb * np.eye(K.shape[0])  # regularization to prevent overfitting
-            L = cho_factor(K)   # Cholesky factorization
-            alpha = cho_solve(L, y_train.reshape(-1,1)) # estimated alphas
+            R = cho_factor(K)   # Cholesky factorization
+            alpha = cho_solve(R, y_train.reshape(-1,1)) # estimated alphas
             # print("x_train shape = {}".format(x_train.shape))
             # print("x shape = {}".format(x.shape))
             # print("alpha shape = {}".format(alpha.shape))
@@ -101,6 +101,24 @@ def rbf(dataset, validation=True, thetas=q3_thetas, lambdas=q3_lambdas):
 ##############################################################################
 #######################      QUESTION 4      #################################
 ##############################################################################
+
+def sin(w, phi, x):
+    '''Sine function with period T, angular frequency w, and input x.'''
+    return np.sin(w*x + phi)
+
+def exponential(a, c, x):
+    '''Exponential function with amplitude a, decay rate b, constant shift c,
+    and input x.'''
+    return np.exp(a*x) + c
+
+def polynomial(degree, x, c):
+    '''Polynomial function with given degree and input x and constant shift c.'''
+    return np.power(x, degree) + c
+
+def basis_maker():
+    '''Returns a list of basis functions.'''
+    functions = []
+    pass
 
 def greedy(dict, dataset='mauna_loa', validation=True):
     '''Greedy regression algorithm using a dictionary of basis functions. The
@@ -143,10 +161,22 @@ if __name__ == "__main__":
     # Q3: RBF model
     print("Q3: RBF model")
     # rbf('mauna_loa', True, q3_thetas, q3_lambdas) # RBF model on the validation set for mauna_loa
-    rbf('mauna_loa', False, q3_thetas, q3_lambdas) # RBF model on the test set for mauna_loa
+    # rbf('mauna_loa', False, q3_thetas, q3_lambdas) # RBF model on the test set for mauna_loa
     # rbf('rosenbrock', True, q3_thetas, q3_lambdas) # RBF model on the validation set for rosenbrock
     # rbf('rosenbrock', False, q3_thetas, q3_lambdas) # RBF model on the test set for rosenbrock
 
     # Q4: Greedy regression algorithm
+
+    # Plotting mauna_loa dataset (training points):
+    x_train, x_val, x_test, y_train, y_val, y_test = load_dataset('mauna_loa')
+
+    plt.scatter(x_train, y_train, color='blue',label='training points', s=1)
+    x = np.arange(min(x_train), max(x_train), 0.01)
+    y = 0.1*np.sin(80*x)+x
+    plt.plot(x, y, color='red', markersize=2,label='0.1*sin(80*x)+x')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.legend()
+    plt.show()
 
     pass
