@@ -13,11 +13,11 @@ def gaussian_kernel(x, z, theta=1.):
         """
         Evaluate the Gram matrix for a Gaussian kernel between points in x and z.
         Inputs:
-            x : array of shape (N, d)
-            z : array of shape (M, d)
+            x : array with shape (N, d)
+            z : array with shape (M, d)
             theta : lengthscale parameter (>0)
         Outputs:
-            k : Gram matrix of shape (N, M)
+            k : Gram matrix with shape (N, M)
         """
         # reshape the matricies correctly for broadcasting
         x = np.expand_dims(x, axis=1)
@@ -27,8 +27,8 @@ def gaussian_kernel(x, z, theta=1.):
         return np.exp(-np.sum(np.square(x-z)/theta, axis=2, keepdims=False))
 
 # Q3 parameters:
-q3_thetas = [0.05, 0.1, 0.5, 1, 2] # shape parameters
-q3_lambdas = [0.001, 0.01, 0.1, 1] # regularization parameters
+q3_thetas = [0.05, 0.1, 0.5, 1, 2] # given shape parameters
+q3_lambdas = [0.001, 0.01, 0.1, 1] # given regularization parameters
 np.random.seed(42)
 
 def rbf(dataset, validation=True, thetas=q3_thetas, lambdas=q3_lambdas):
@@ -52,7 +52,7 @@ def rbf(dataset, validation=True, thetas=q3_thetas, lambdas=q3_lambdas):
 
     min_rmse = np.inf
 
-    # # Load the data:
+    # Load the data:
     if dataset=='rosenbrock':   # shape of (1000,2)
         x_train, x_val, x_test, y_train, y_val, y_test = load_dataset('rosenbrock', n_train=1000, d=2)
         print("Dataset being tested: rosenbrock\n\n")
@@ -68,34 +68,34 @@ def rbf(dataset, validation=True, thetas=q3_thetas, lambdas=q3_lambdas):
     y_train = y_train.reshape((-1, 1))
     y_val = y_val.reshape((-1, 1))
 
-    if validation==True: 
+    if validation==True: # to find the validation RMSEs
         print("Using validation set to find best model\n\n")
         x = x_val
         y = y_val
-    else:   # use x_test, y_test instead of x_val, y_val
+    else:   # use x_test, y_test instead of x_val, y_val to find test RMSEs
         print("Using test set to find best model\n\n")
+        # print("x_train shape = {}".format(x_train.shape)) # (511,1)
+        # print("x_val shape = {}".format(x_val.shape))   # (145,1)
+        # print("y_train shape = {}".format(x_train.shape)) # (511,1)
+        # np.concatenate((x_train, x_val), axis=0) # (656,1)
+        # np.concatenate((y_train, y_val), axis=0)
         x = x_test
         y = y_test
 
     for i, theta in enumerate(thetas):
         for j, lamb in enumerate(lambdas):
-            # construct the kernel matrix
-            K = gaussian_kernel(x_train, x_train, theta=theta)
-            # add regularization to prevent overfitting
-            K += lamb * np.eye(K.shape[0])
-            # compute the cholesky factorization
-            L = cho_factor(K)
-            # compute the alpha values
-            alpha = cho_solve(L, y_train.reshape(-1,1))
-            # compute the RMSE loss
+            K = gaussian_kernel(x_train, x_train, theta=theta)  # kernel matrix
+            K += lamb * np.eye(K.shape[0])  # regularization to prevent overfitting
+            L = cho_factor(K)   # Cholesky factorization
+            alpha = cho_solve(L, y_train.reshape(-1,1)) # estimated alphas
             # print("x_train shape = {}".format(x_train.shape))
             # print("x shape = {}".format(x.shape))
             # print("alpha shape = {}".format(alpha.shape))
-            y_pred = np.dot(gaussian_kernel(x_train, x, theta=theta).T, alpha.reshape(-1,1)) # are these parameters right for gausian kernel? reshaping alpha into col vector
-            rmse = np.sqrt(np.mean(np.square(y_pred - y))) # should this be least squared loss instead?? TODO
-            min_rmse = min(min_rmse, rmse)
+            y_pred = np.dot(gaussian_kernel(x_train, x, theta=theta).T, alpha.reshape(-1,1)) # reshaping alpha into col vector (mxn) x (nx1) 
+            rmse = np.sqrt(np.mean(np.square(y_pred - y))) # calculate the rmse loss 
+            min_rmse = min(min_rmse, rmse)  # save the minimum loss so far
             print("theta = {}, lambda = {}, RMSE = {}\n".format(theta, lamb, rmse))
-    print("min RMSE = {}".format(min_rmse))
+    print("overall min RMSE = {}".format(min_rmse))
     return
 
 ##############################################################################
@@ -109,6 +109,10 @@ def greedy(dict, dataset='mauna_loa', validation=True):
     - dataset: string, either 'rosenbrock' or 'mauna_loa'
     - validation: boolean, if True, use the validation set to find the best.
         If False, use the test set to find the best.
+
+    At each iteration, use the orthogonal matching pursuit metric. The stopping
+    criterion is the minimum description length (MDL) given in Q4. The function
+    can be used to plot the prediction relative to the test data and the RMSE. 
     '''
     # Load the data:
     if dataset=='mauna_loa':
@@ -126,6 +130,9 @@ def greedy(dict, dataset='mauna_loa', validation=True):
     else:
         x = x_test
         y = y_test
+    
+    # stop_criterion = N/2*np.log(l2 - loss) + k/2*np.log(N)
+    
 
 ##############################################################################
 #######################         MAIN        ##################################
@@ -135,8 +142,8 @@ if __name__ == "__main__":
 
     # Q3: RBF model
     print("Q3: RBF model")
-    rbf('mauna_loa', True, q3_thetas, q3_lambdas) # RBF model on the validation set for mauna_loa
-    # rbf('mauna_loa', False, q3_thetas, q3_lambdas) # RBF model on the test set for mauna_loa
+    # rbf('mauna_loa', True, q3_thetas, q3_lambdas) # RBF model on the validation set for mauna_loa
+    rbf('mauna_loa', False, q3_thetas, q3_lambdas) # RBF model on the test set for mauna_loa
     # rbf('rosenbrock', True, q3_thetas, q3_lambdas) # RBF model on the validation set for rosenbrock
     # rbf('rosenbrock', False, q3_thetas, q3_lambdas) # RBF model on the test set for rosenbrock
 
