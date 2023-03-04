@@ -3,6 +3,7 @@ import time
 from data_utils import load_dataset
 import matplotlib.pyplot as plt
 from scipy.linalg import cho_factor, cho_solve
+import math
 
 ##############################################################################
 #######################      QUESTION 3      #################################
@@ -106,24 +107,40 @@ def sin(w, phi, x):
     '''Sine function with period T, angular frequency w, and input x.'''
     return np.sin(w*x + phi)
 
-def exponential(a, c, x):
+def exponential(a, x):
     '''Exponential function with amplitude a, decay rate b, constant shift c,
     and input x.'''
-    return np.exp(a*x) + c
+    return np.exp(a*x) 
 
-def polynomial(degree, x, c):
-    '''Polynomial function with given degree and input x and constant shift c.'''
-    return np.power(x, degree) + c
+def polynomial(degree, x):
+    '''Polynomial function with given degree and input x.'''
+    return np.power(x, degree) 
 
 def basis_maker():
-    '''Returns a list of basis functions.'''
+    '''Returns a list of basis functions. The basis_maker creates ____ candidate
+    basis functions, and the format of each element is a tuple, where the first
+    value is the basis function and the second is the parameters to use.'''
     functions = []
-    pass
 
-def greedy(dict, dataset='mauna_loa', validation=True):
+    # Iterate over possible parameters for the sinusoidal function: 
+    for w in np.arange(50, 150, 5): # 20 possibilities
+        for phi in np.arange(-np.pi, np.pi, 0.3): # 21 possibilities
+            functions.append((sin, {'w': w, 'phi': phi}))
+
+    # Iterate over possible parameters for the exponential function:
+    for a in np.arange(0.1, 1, 0.5):
+        functions.append((exponential, {'a': a}))
+
+    # Iterate over possible parameters for the polynomial function:
+    for degree in range(1,6): # 5 possibilities
+        functions.append((polynomial, {'degree': degree, 'c': 0}))
+        
+    return functions
+
+def greedy(bases=basis_maker(), dataset='mauna_loa', validation=True):
     '''Greedy regression algorithm using a dictionary of basis functions. The
     inputs to this function are:
-    - dict: dictionary of basis functions (contains at least 200)
+    - bases: dictionary of basis functions (contains at least 200)
     - dataset: string, either 'rosenbrock' or 'mauna_loa'
     - validation: boolean, if True, use the validation set to find the best.
         If False, use the test set to find the best.
@@ -149,8 +166,61 @@ def greedy(dict, dataset='mauna_loa', validation=True):
         x = x_test
         y = y_test
     
-    # stop_criterion = N/2*np.log(l2 - loss) + k/2*np.log(N)
+    # Calculate the stopping criterion: 
+    phi = [] # initialize the phi matrix of chosen basis functions (evaluated at x_train points)
+    chosen = [] # list of chosen basis functions
+    k = len(chosen) # number of functions picked so far
+    N = x_train.shape[0]  # number of data points
+
+    r = y_train   # intialize r (the residual)
+    lste = np.linalg.norm(r)  # least-squares training error
+    mdl = N/2*np.log(lste) + k/2*np.log(N) # intialize minimum description length as stop criterion 
+    new_mdl = mdl
+
+    while np.linalg.norm(r) > 0.1 and new_mdl <= mdl: # ensuring the error doesn't grow
+        k += 1
+        best_reduction = -float('inf') # initialize error to -infinity 
+
+        # Pick a new basis function from the dictionary:
+        for i in range(len(bases)):
+            tup = bases[i]
+            if tup[0] == sin:
+                phi_col = tup[0](tup[1]['w'], tup[1]['phi'], x_train) # evaluate the basis function at x_train points
+            elif tup[0] == exponential:
+                phi_col = tup[0](tup[1]['a'], x_train)
+            elif tup[0] == polynomial:
+                phi_col = tup[0](tup[1]['degree'], x_train)
+            # col = col.reshape((-1, 1)) # reshape into column vector
+            J = np.square(np.dot(phi_col.T, r))/np.dot(phi_col.T, phi_col) # calculate J
+            
+            if not math.isnan(J):   # in case division by 0 
+                if J > best_reduction:
+                    best_reduction = J
+                    best_basis = bases[i] # tuple format (basis function, parameters)
+                    best_col = phi_col # column vector of basis function evaluated at x_train points
+
+        chosen.append(best_basis) # add the best basis function to the list of chosen functions
+        bases.remove(best_basis)    # remove best basis from bases
+
+        # add the new column to phi matrix:
+        if k == 1: # first iteration; phi is an empty list 
+            phi = best_col
+        else:
+            phi = np.hstack((phi, best_col)) # add column to phi matrix
+
+        # solve for the weights:
+        phi_pinv = np.linalg.pinv(phi) # find pseudo-inverse of phi matrix
+        w = np.dot(phi_pinv, y_train) # calculate the weights
+        
+        # update residual r and mdl:
+        r = y_train - np.dot(phi, w)
+        mdl = new_mdl
+        new_mdl = N/2*np.log(np.linalg.norm(r)) + k/2*np.log(N) 
+
+        # present the test RMSE
+        # rmse = 
     
+    return chosen, w
 
 ##############################################################################
 #######################         MAIN        ##################################
@@ -167,16 +237,21 @@ if __name__ == "__main__":
 
     # Q4: Greedy regression algorithm
 
-    # Plotting mauna_loa dataset (training points):
-    x_train, x_val, x_test, y_train, y_val, y_test = load_dataset('mauna_loa')
+    # tup = (sin, {'w': 50, 'phi': 0})
+    # print(tup[0](tup[1]['w'], tup[1]['phi'], 1))
 
-    plt.scatter(x_train, y_train, color='blue',label='training points', s=1)
-    x = np.arange(min(x_train), max(x_train), 0.01)
-    y = 0.1*np.sin(80*x)+x
-    plt.plot(x, y, color='red', markersize=2,label='0.1*sin(80*x)+x')
-    plt.xlabel('x')
-    plt.ylabel('y')
-    plt.legend()
-    plt.show()
+    greedy()
+
+
+    # Plotting mauna_loa dataset (training points):
+    # x_train, x_val, x_test, y_train, y_val, y_test = load_dataset('mauna_loa')
+    # plt.scatter(x_train, y_train, color='blue',label='training points', s=1)
+    # x = np.arange(min(x_train), max(x_train), 0.01)
+    # y = 0.1*np.sin(80*x)+x
+    # plt.plot(x, y, color='red', markersize=2,label='0.1*sin(80*x)+x')
+    # plt.xlabel('x')
+    # plt.ylabel('y')
+    # plt.legend()
+    # plt.show()
 
     pass
