@@ -137,13 +137,11 @@ def basis_maker():
         
     return functions
 
-def greedy(bases=basis_maker(), dataset='mauna_loa', validation=True):
+def greedy(bases=basis_maker(), dataset='mauna_loa', training=True):
     '''Greedy regression algorithm using a dictionary of basis functions. The
     inputs to this function are:
     - bases: dictionary of basis functions (contains at least 200)
     - dataset: string, either 'rosenbrock' or 'mauna_loa'
-    - validation: boolean, if True, use the validation set to find the best.
-        If False, use the test set to find the best.
 
     At each iteration, use the orthogonal matching pursuit metric. The stopping
     criterion is the minimum description length (MDL) given in Q4. The function
@@ -158,13 +156,9 @@ def greedy(bases=basis_maker(), dataset='mauna_loa', validation=True):
     else:
         return None
 
-    # Use either validation or test set:
-    if validation==True:
-        x = x_val
-        y = y_val
-    else:
-        x = x_test
-        y = y_test
+    # To test, concatenate the training and validation sets:
+    x_train = np.concatenate((x_train, x_val), axis=0)
+    y_train = np.concatenate((y_train, y_val), axis=0)
     
     # Calculate the stopping criterion: 
     phi = [] # initialize the phi matrix of chosen basis functions (evaluated at x_train points)
@@ -217,8 +211,52 @@ def greedy(bases=basis_maker(), dataset='mauna_loa', validation=True):
         mdl = new_mdl
         new_mdl = N/2*np.log(np.linalg.norm(r)) + k/2*np.log(N) 
 
-        # present the test RMSE
-        # rmse = 
+        # plot the prediction relative to the test data for each iteration for the TRAINING + VALIDATION SET:
+        # this can be used to see how accuracy improves with each iteration
+        # plt.plot(x_train, y_train, 'og', label='training data', markersize=2)
+        # plt.plot(x_train, np.dot(phi, w), 'om', label='prediction', markersize=2)
+        # plt.show()
+
+    # FOR THE TESTING SET:
+    final_phi = []
+    count = 0
+
+    for f in chosen:
+        if f[0] == sin:
+            if count == 0:
+                final_phi = f[0](f[1]['w'], f[1]['phi'], x_test)
+                count += 1
+            else:
+                final_phi = np.hstack((final_phi, f[0](f[1]['w'], f[1]['phi'], x_test)))
+        elif f[0] == exponential:
+            if count == 0:
+                final_phi = f[0](f[1]['a'], x_test)
+                count += 1
+            else:
+                final_phi = np.hstack((final_phi, f[0](f[1]['a'], x_test)))
+        elif f[0] == polynomial:
+            if count == 0:
+                final_phi = f[0](f[1]['degree'], x_test)
+                count += 1
+            else:
+                final_phi = np.hstack((final_phi, f[0](f[1]['degree'], x_test)))      
+
+    # Get the y predictions:
+    y_pred = np.dot(final_phi, w)
+
+    # Get the test RMSE
+    rmse = np.sqrt(np.mean(np.square(y_test - y_pred)))
+    print("testing RMSE: ", rmse)
+
+    # Plot the TESTING PREDICTIONS:
+    # plt.plot(x_train, y_train, 'ob', label='training data', markersize=2)
+    plt.plot(x_test, y_test, 'og', label='test data', markersize=5)
+    plt.plot(x_test, y_pred, 'or', label='prediction', markersize=5)
+    plt.title('Greedy Regression Algorithm on ' + dataset + ' dataset')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.legend()
+    plt.show()
     
     return chosen, w
 
@@ -228,21 +266,18 @@ def greedy(bases=basis_maker(), dataset='mauna_loa', validation=True):
 
 if __name__ == "__main__":
 
-    # Q3: RBF model
+    ########################### Q3: RBF model ##################################
     print("Q3: RBF model")
     # rbf('mauna_loa', True, q3_thetas, q3_lambdas) # RBF model on the validation set for mauna_loa
     # rbf('mauna_loa', False, q3_thetas, q3_lambdas) # RBF model on the test set for mauna_loa
     # rbf('rosenbrock', True, q3_thetas, q3_lambdas) # RBF model on the validation set for rosenbrock
     # rbf('rosenbrock', False, q3_thetas, q3_lambdas) # RBF model on the test set for rosenbrock
 
-    # Q4: Greedy regression algorithm
+    #################### Q4: Greedy regression algorithm #######################
+    print("Q4: Greedy regression algorithm")
+    greedy() # greedy regression algorithm on the mauna_loa dataset
 
-    # tup = (sin, {'w': 50, 'phi': 0})
-    # print(tup[0](tup[1]['w'], tup[1]['phi'], 1))
-
-    greedy()
-
-
+    # Extra plotting to help determine parameters to try for mauna_loa in designing basis function list:
     # Plotting mauna_loa dataset (training points):
     # x_train, x_val, x_test, y_train, y_val, y_test = load_dataset('mauna_loa')
     # plt.scatter(x_train, y_train, color='blue',label='training points', s=1)
@@ -253,5 +288,3 @@ if __name__ == "__main__":
     # plt.ylabel('y')
     # plt.legend()
     # plt.show()
-
-    pass
