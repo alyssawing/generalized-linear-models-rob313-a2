@@ -104,7 +104,7 @@ def rbf(dataset, validation=True, thetas=q3_thetas, lambdas=q3_lambdas):
 ##############################################################################
 
 def sin(w, phi, x):
-    '''Sine function with period T, angular frequency w, and input x.'''
+    '''Sine function with phase shift phit, angular frequency w, and input x.'''
     return np.sin(w*x + phi)
 
 def exponential(a, x):
@@ -137,7 +137,7 @@ def basis_maker():
         
     return functions
 
-def greedy(bases=basis_maker(), dataset='mauna_loa', training=True):
+def greedy(bases=basis_maker(), dataset='mauna_loa'):
     '''Greedy regression algorithm using a dictionary of basis functions. The
     inputs to this function are:
     - bases: dictionary of basis functions (contains at least 200)
