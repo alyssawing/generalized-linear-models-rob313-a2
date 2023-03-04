@@ -249,13 +249,13 @@ def greedy(bases=basis_maker(), dataset='mauna_loa'):
     print("\ntesting RMSE: ", rmse)
 
     # Counting the number of nonzero vs. zero coefficients in w (to comment on sparsity of the model):
-    num_nonzero = np.count_nonzero(w)
-    num_zero = len(w) - num_nonzero
-    print(f"\nNumber of non-zero coefficients: {num_nonzero}")
-    print(f"Number of zero coefficients: {num_zero}")
+    # num_nonzero = np.count_nonzero(w)
+    # num_zero = len(w) - num_nonzero
+    # print(f"\nNumber of non-zero coefficients: {num_nonzero}")
+    # print(f"Number of zero coefficients: {num_zero}")
 
-    for i, weight in enumerate(w):
-        print(f"Coefficient {i+1}: {weight}")
+    # for i, weight in enumerate(w):
+    #     print(f"Coefficient {i+1}: {weight}")
 
     # Plot the TESTING PREDICTIONS:
     # plt.plot(x_train, y_train, 'ob', label='training data', markersize=2)
