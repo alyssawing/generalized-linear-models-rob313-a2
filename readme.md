@@ -1,4 +1,4 @@
-# README
+# README: Generalized Linear Models
 
 This contains information on how to run different parts of Question 3 and 
 Question 4 from Assignment 2 (ROB313). In addition, the code is also throughly commented.
