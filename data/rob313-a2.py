@@ -160,13 +160,12 @@ def greedy(bases=basis_maker(), dataset='mauna_loa'):
     x_train = np.concatenate((x_train, x_val), axis=0)
     y_train = np.concatenate((y_train, y_val), axis=0)
     
-    # Calculate the stopping criterion: 
     phi = [] # initialize the phi matrix of chosen basis functions (evaluated at x_train points)
     chosen = [] # list of chosen basis functions
     k = len(chosen) # number of functions picked so far
     N = x_train.shape[0]  # number of data points
 
-    r = y_train   # intialize r (the residual)
+    r = y_train   # intialize r (the ruesidual)
     lste = np.linalg.norm(r)  # least-squares training error
     mdl = N/2*np.log(lste) + k/2*np.log(N) # intialize minimum description length as stop criterion 
     new_mdl = mdl
@@ -217,11 +216,12 @@ def greedy(bases=basis_maker(), dataset='mauna_loa'):
         # plt.plot(x_train, np.dot(phi, w), 'om', label='prediction', markersize=2)
         # plt.show()
 
-    # FOR THE TESTING SET:
+    ######################## FOR THE TESTING SET: ############################
     final_phi = []
     count = 0
-
+    
     for f in chosen:
+        print("\na chosen basis function is: ", f[0], f[1])
         if f[0] == sin:
             if count == 0:
                 final_phi = f[0](f[1]['w'], f[1]['phi'], x_test)
@@ -246,7 +246,16 @@ def greedy(bases=basis_maker(), dataset='mauna_loa'):
 
     # Get the test RMSE
     rmse = np.sqrt(np.mean(np.square(y_test - y_pred)))
-    print("testing RMSE: ", rmse)
+    print("\ntesting RMSE: ", rmse)
+
+    # Counting the number of nonzero vs. zero coefficients in w (to comment on sparsity of the model):
+    num_nonzero = np.count_nonzero(w)
+    num_zero = len(w) - num_nonzero
+    print(f"\nNumber of non-zero coefficients: {num_nonzero}")
+    print(f"Number of zero coefficients: {num_zero}")
+
+    for i, weight in enumerate(w):
+        print(f"Coefficient {i+1}: {weight}")
 
     # Plot the TESTING PREDICTIONS:
     # plt.plot(x_train, y_train, 'ob', label='training data', markersize=2)
@@ -267,7 +276,8 @@ def greedy(bases=basis_maker(), dataset='mauna_loa'):
 if __name__ == "__main__":
 
     ########################### Q3: RBF model ##################################
-    print("Q3: RBF model")
+    # print("Q3: RBF model")
+
     # rbf('mauna_loa', True, q3_thetas, q3_lambdas) # RBF model on the validation set for mauna_loa
     # rbf('mauna_loa', False, q3_thetas, q3_lambdas) # RBF model on the test set for mauna_loa
     # rbf('rosenbrock', True, q3_thetas, q3_lambdas) # RBF model on the validation set for rosenbrock
